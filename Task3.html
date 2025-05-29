@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Advanced Knowledge Quiz</title>
+<style>
+  :root {
+    --primary-color: #3b82f6;
+    --secondary-color: #1e40af;
+    --accent-color: #60a5fa;
+    --correct-color: #16a34a;
+    --wrong-color: #dc2626;
+    --text-color: #1f2937;
+    --bg-color: #f9fafb;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 20px;
+    color: var(--text-color);
+  }
+  .quiz-container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    padding: 40px 35px;
+    transition: box-shadow 0.3s ease;
+  }
+  .quiz-container:hover {
+    box-shadow: 0 15px 40px var(--shadow-color);
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+    color: var(--secondary-color);
+    letter-spacing: 1.3px;
+  }
+  .progress-container {
+    background: #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 14px;
+    margin-bottom: 25px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+  .timer {
+    text-align: right;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 25px;
+    color: var(--secondary-color);
+    font-variant-numeric: tabular-nums;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .question {
+    padding: 20px 25px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    box-shadow: 0 2px 6px var(--shadow-color);
+    position: relative;
+    transition: border-left-color 0.4s ease;
+    border-left: 6px solid transparent;
+  }
+  .question.correct {
+    border-left-color: var(--correct-color);
+  }
+  .question.incorrect {
+    border-left-color: var(--wrong-color);
+  }
+  .question-text {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: var(--secondary-color);
+  }
+  .difficulty {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-weight: 700;
+    margin-left: 12px;
+    vertical-align: middle;
+    user-select: none;
+  }
+  .easy {
+    background-color: #bbf7d0;
+    color: #15803d;
+  }
+  .medium {
+    background-color: #fde68a;
+    color: #b45309;
+  }
+  .hard {
+    background-color: #fecaca;
+    color: #991b1b;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-left: 8px;
+  }
+  label.option {
+    background: #fff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 1px 4px var(--shadow-color);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 17px;
+    transition: background-color 0.25s ease;
+    user-select: none;
+    position: relative;
+  }
+  label.option:hover {
+    background-color: var(--accent-color);
+    color: white;
+  }
+  label.option input[type="radio"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+  }
+  label.option.correct-answer {
+    background-color: #d1fae5;
+    border: 2px solid var(--correct-color);
+  }
+  label.option.user-correct {
+    background-color: #a7f3d0;
+  }
+  label.option.user-incorrect {
+    background-color: #fecaca;
+    text-decoration: line-through;
+  }
+  .option-marker {
+    position: absolute;
+    right: 20px;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .correct-marker {
+    color: var(--correct-color);
+  }
+  .incorrect-marker {
+    color: var(--wrong-color);
+  }
+  input.text-answer {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid #d1d5db;
+    font-size: 18px;
+    transition: border-color 0.3s ease;
+    outline-offset: 2px;
+  }
+  input.text-answer:focus {
+    border-color: var(--primary-color);
+    outline: none;
+  }
+  input.text-answer.correct {
+    border-color: var(--correct-color);
+    background-color: #d1fae5;
+  }
+  input.text-answer.incorrect {
+    border-color: var(--wrong-color);
+    background-color: #fee2e2;
+  }
+  .feedback {
+    margin-top: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    display: none;
+    padding: 10px 15px;
+    border-radius: 10px;
+  }
+  .feedback.correct {
+    color: var(--correct-color);
+    background-color: #d1fae5;
+    display: block;
+  }
+  .feedback.incorrect {
+    color: var(--wrong-color);
+    background-color: #fee2e2;
+    display: block;
+  }
+  button#submitBtn {
+    margin-top: 35px;
+    padding: 18px;
+    border: none;
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    background: var(--primary-color);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  button#submitBtn:hover:not(:disabled) {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+  }
+  button#submitBtn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .score-container {
+    margin-top: 35px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--secondary-color);
+    text-align: center;
+    padding: 25px 10px;
+    border-radius: 12px;
+    background-color: #e0e7ff;
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    .quiz-container {
+      padding: 25px 20px;
+    }
+    .question-text {
+      font-size: 18px;
+    }
+    label.option {
+      font-size: 16px;
+      padding: 10px 15px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>Advanced Knowledge Quiz</h1>
+
+    <div class="progress-container" aria-label="Progress Bar">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="timer" id="timer" aria-live="polite" aria-atomic="true">Time: 05:00</div>
+
+    <form id="quizForm" aria-describedby="scoreContainer">
+
+      <div class="question" id="question1">
+        <div class="question-text">
+          1. What is the time complexity of accessing an element in a balanced binary search tree?
+          <span class="difficulty easy" aria-label="Difficulty: Easy">Easy</span>
+        </div>
+        <div class="options" role="radiogroup" aria-labelledby="question1">
+          <label class="option" id="option1-1">
+            <input type="radio" name="q1" value="O(1)" aria-checked="false" />
+            O(1)
+          </label>
+          <label class="option" id="option1-2">
+            <input type="radio" name="q1" value="O(log n)" aria-checked="false" />
+            O(log n)
+          </label>
+          <label class="option" id="option1-3">
+            <input type="radio" name="q1" value="O(n)" aria-checked="false" />
+            O(n)
+          </label>
+          <label class="option" id="option1-4">
+            <input type="radio" name="q1" value="O(n log n)" aria-checked="false" />
+            O(n log n)
+          </label>
+        </div>
+        <div class="feedback" id="feedback1" role="alert"></div>
+      </div>
+
+      <div class="question" id="question2">
+        <div class="question-text">
+          2. Which HTTP status code indicates a permanent redirect?
+          <span class="difficulty medium" aria-label="Difficulty: Medium">Medium</span>
+        </div>
+        <div class="options" role="radiogroup" aria-labelledby="question2">
+          <label class="option" id="option2-1">
+            <input type="radio" name="q2" value="301" />
+            301
+          </label>
+          <label class="option" id="option2-2">
+            <input type="radio" name="q2" value="302" />
+            302
+          </label>
+          <label class="option" id="option2-3">
+            <input type="radio" name="q2" value="307" />
+            307
+          </label>
+          <label class="option" id="option2-4">
+            <input type="radio" name="q2" value="404" />
+            404
+          </label>
+        </div>
+        <div class="feedback" id="feedback2" role="alert"></div>
+      </div>
+
+      <div class="question" id="question3">
+        <div class="question-text">
+          3. Which data structure is most appropriate for implementing a priority queue?
+          <span class="difficulty medium" aria-label="Difficulty: Medium">Medium</span>
+        </div>
+        <div class="options" role="radiogroup" aria-labelledby="question3">
+          <label class="option" id="option3-1">
+            <input type="radio" name="q3" value="Stack" />
+            Stack
+          </label>
+          <label class="option" id="option3-2">
+            <input type="radio" name="q3" value="Heap" />
+            Heap
+          </label>
+          <label class="option" id="option3-3">
+            <input type="radio" name="q3" value="Queue" />
+            Queue
+          </label>
+          <label class="option" id="option3-4">
+            <input type="radio" name="q3" value="Linked List" />
+            Linked List
+          </label>
+        </div>
+        <div class="feedback" id="feedback3" role="alert"></div>
+      </div>
+
+      <div class="question" id="question4">
+        <div class="question-text">
+          4. What is the output of the following JavaScript expression: <code>typeof NaN</code>?
+          <span class="difficulty hard" aria-label="Difficulty: Hard">Hard</span>
+        </div>
+        <input
+          type="text"
+          id="q4text"
+          class="text-answer"
+          placeholder="Your answer here..."
+          autocomplete="off"
+          aria-describedby="feedback4"
+        />
+        <div class="feedback" id="feedback4" role="alert"></div>
+      </div>
+
+      <div class="question" id="question5">
+        <div class="question-text">
+          5. In CSS, what does the acronym “BEM” stand for?
+          <span class="difficulty easy" aria-label="Difficulty: Easy">Easy</span>
+        </div>
+        <div class="options" role="radiogroup" aria-labelledby="question5">
+          <label class="option" id="option5-1">
+            <input type="radio" name="q5" value="Block Element Modifier" />
+            Block Element Modifier
+          </label>
+          <label class="option" id="option5-2">
+            <input type="radio" name="q5" value="Base Element Model" />
+            Base Element Model
+          </label>
+          <label class="option" id="option5-3">
+            <input type="radio" name="q5" value="Block Element Model" />
+            Block Element Model
+          </label>
+          <label class="option" id="option5-4">
+            <input type="radio" name="q5" value="Base Element Modifier" />
+            Base Element Modifier
+          </label>
+        </div>
+        <div class="feedback" id="feedback5" role="alert"></div>
+      </div>
+
+      <div class="question" id="question6">
+        <div class="question-text">
+          6. What does SQL stand for?
+          <span class="difficulty easy" aria-label="Difficulty: Easy">Easy</span>
+        </div>
+        <div class="options" role="radiogroup" aria-labelledby="question6">
+          <label class="option" id="option6-1">
+            <input type="radio" name="q6" value="Structured Query Language" />
+            Structured Query Language
+          </label>
+          <label class="option" id="option6-2">
+            <input type="radio" name="q6" value="Simple Query
+Language" />
+Simple Query Language
+</label>
+<label class="option" id="option6-3">
+<input type="radio" name="q6" value="Structured Question Language" />
+Structured Question Language
+</label>
+<label class="option" id="option6-4">
+<input type="radio" name="q6" value="Simple Question Language" />
+Simple Question Language
+</label>
+</div>
+<div class="feedback" id="feedback6" role="alert"></div>
+</div>
+  <button type="submit" id="submitBtn" disabled>Submit Answers</button>
+</form>
+
+<div id="scoreContainer" class="score-container" role="region" aria-live="polite"></div>
+</div> </body> </html>
